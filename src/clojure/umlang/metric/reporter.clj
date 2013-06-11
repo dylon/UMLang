@@ -18,9 +18,45 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(ns umlang.core)
+(ns umlang.metric.reporter
+  (:import [com.codahale.metrics MetricRegistry MetricFilter Timer]
+           [com.codahale.metrics.graphite Graphite GraphiteReporter]
+           [java.util.concurrent TimeUnit]
+           [java.net InetSocketAddress]))
 
-(defn -main
-  "Main entrypoint of the application"
-  ([& args]
-   (println "Nothing to see here. Move along.")))
+(def metric-registry
+  (MetricRegistry.))
+
+(def graphite
+  (Graphite. (InetSocketAddress. "localhost" 2003)))
+
+(def graphite-reporter
+  (.. GraphiteReporter
+    (forRegistry metric-registry)
+    (prefixedWith "umlang.metrics")
+    (convertRatesTo TimeUnit/SECONDS)
+    (convertDurationsTo TimeUnit/MILLISECONDS)
+    (filter MetricFilter/ALL)
+    (build graphite)))
+
+(.start graphite-reporter 1 TimeUnit/SECONDS)
+
+(.. Runtime
+  (getRuntime)
+  (addShutdownHook
+    (proxy [Thread] []
+      (run []
+        (doto graphite-reporter
+          (.report)
+          (.stop))))))
+
+;(definline benchmark [metric-name forms]
+  ;`(let [metric-name# ~metric-name
+         ;metric-registry# ~metric-registry
+         ;timer# (.timer metric-registry# metric-name#)
+         ;context# (.time timer#)]
+     ;(try
+       ;~@forms
+       ;(finally
+         ;(.stop context#)))))
+

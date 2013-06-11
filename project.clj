@@ -30,8 +30,15 @@
                                                     com.sun.jdmk/jmxtools
                                                     com.sun.jmx/jmxri]]
                  [org.slf4j/slf4j-log4j12 "1.7.5"]
-                 [org.clojure/tools.logging "0.2.6"]]
-  :plugins [[org.antlr/stringtemplate "4.0.7"]]
+                 [org.clojure/tools.logging "0.2.6"]
+                 [com.codahale.metrics/metrics-core "3.0.0-BETA3"]
+                 [com.codahale.metrics/metrics-graphite "3.0.0-BETA3"]
+                 [org.apache.commons/commons-lang3 "3.1"]
+                ]
+  :plugins [[org.antlr/stringtemplate "4.0.7"]
+            [org.clojure/tools.cli "0.2.2"]]
+  :profiles {:dev {:dependencies [[midje "1.5.1"]]
+                   :plugins [[lein-midje "3.0.1"]]}}
   :source-paths ["src/clojure/"]
   :java-source-paths ["src/java/"]
   :main umlang.core)
