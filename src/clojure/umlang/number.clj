@@ -60,10 +60,10 @@
   (odd?
     [this]))
 
-(defmacro def->integer [Type ctor constrained?]
+(defmacro def->number [NumberType ValueType PrimitiveType ctor constrained?]
   `(do
     (declare ~ctor)
-    (deftype ~Type [^BigInteger value#]
+    (deftype ~NumberType [value#]
       INumber
 
       (value-of
@@ -101,13 +101,14 @@
         (clojure.core/>= (.compareTo value# (value-of other#)) 0))
       (inc
         [this#]
-        (~ctor (.add value# BigInteger/ONE)))
+        (~ctor (.add value# ~(symbol (str ValueType "/ONE")))))
       (dec
         [this#]
-        (~ctor (.subtract value# BigInteger/ONE)))
+        (~ctor (.subtract value# ~(symbol (str ValueType "/ONE")))))
       (even?
         [this#]
-        (-> (.mod value# (BigInteger/valueOf 2)) (.equals BigInteger/ZERO)))
+        (-> (.mod value# (~(symbol (str ValueType "/valueOf")) 2))
+          (.equals ~(symbol (str ValueType "/ZERO")))))
       (odd?
         [this#]
         (not (even? this#)))
@@ -116,7 +117,7 @@
 
       (equals
         [this# other#]
-        (and (instance? ~Type other#)
+        (and (instance? ~NumberType other#)
           (not (nil? other#))
           (= this# other#)))
       (hashCode
@@ -131,19 +132,19 @@
           (.toString))))
 
     (defmulti ~ctor class)
-    (defmethod ~ctor BigInteger [value#]
+    (defmethod ~ctor ~ValueType [value#]
       {:pre [(not (nil? value#)) (~constrained? value#)]}
-      (~(symbol (str Type ".")) value#))
+      (~(symbol (str NumberType ".")) value#))
     (defmethod ~ctor Number [number#]
       {:pre [(not (nil? number#))]}
-      (~ctor (BigInteger/valueOf (.longValue number#))))
+      (~ctor (~(symbol (str ValueType "/valueOf"))
+                 (~(symbol (str "." PrimitiveType "Value")) number#))))
     (defmethod ~ctor INumber [number#]
       (~ctor (value-of number#)))
-    (defmethod ~ctor ~Type [number#]
+    (defmethod ~ctor ~NumberType [number#]
       (~ctor (value-of number#)))))
 
-(def->integer NaturalNumber natural #(clojure.core/not= (.signum %) -1))
-(def->integer IntegerNumber integer (fn [value] true))
-(def->integer IntegerNumber+ integer+ #(clojure.core/= (.signum %) 1))
-(def->integer IntegerNumber- integer- #(clojure.core/= (.signum %) -1))
+(def->number NaturalNumber BigInteger long natural #(clojure.core/not= (.signum %) -1))
+(def->number IntegerNumber BigInteger long integer (fn [value] true))
+(def->number RealNumber BigDecimal double real (fn [value] true))
 
