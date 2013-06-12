@@ -54,13 +54,41 @@
   (inc
     [this])
   (dec
-    [this])
+    [this]))
+
+(defprotocol IIntegerOperations
+  "Integer-specific operations that may not particularly make sense with other
+  sets (e.g. reals and complex numbers)"
+  ;(~
+    ;[this other]
+    ;"Bitwise negation")
+  ;(^
+    ;[this other]
+    ;"Bitwise XOR")
+  ;(&
+    ;[this other]
+    ;"Bitwise AND")
+  ;(|
+    ;[this other]
+    ;"Bitwise OR")
+  ;(>>
+    ;[this other]
+    ;"Bitwise, Arithmetic-Shift Right")
+  ;(<<
+    ;[this other]
+    ;"Bitwise, Arithmetic-Shift Left")
+  ;(o>
+    ;[this other]
+    ;"Bitwise, Rotation Right")
+  ;(<o
+    ;[this other]
+    ;"Bitwise, Rotation Left")
   (even?
     [this])
   (odd?
     [this]))
 
-(defmacro def->number [NumberType ValueType PrimitiveType ctor constrained?]
+(defmacro def->Number [NumberType ValueType PrimitiveType ctor constrained?]
   `(do
     (declare ~ctor)
     (deftype ~NumberType [value#]
@@ -105,13 +133,6 @@
       (dec
         [this#]
         (~ctor (.subtract value# ~(symbol (str ValueType "/ONE")))))
-      (even?
-        [this#]
-        (-> (.mod value# (~(symbol (str ValueType "/valueOf")) 2))
-          (.equals ~(symbol (str ValueType "/ZERO")))))
-      (odd?
-        [this#]
-        (not (even? this#)))
 
       Object
 
@@ -144,7 +165,22 @@
     (defmethod ~ctor ~NumberType [number#]
       (~ctor (value-of number#)))))
 
-(def->number NaturalNumber BigInteger long natural #(clojure.core/not= (.signum %) -1))
-(def->number IntegerNumber BigInteger long integer (fn [value] true))
-(def->number RealNumber BigDecimal double real (fn [value] true))
+(defmacro def->IntegerOperations [NumberType ValueType]
+  `(extend-type ~NumberType
+    IIntegerOperations
+    (even?
+      [this#]
+      (-> (.mod (value-of this#) (~(symbol (str ValueType "/valueOf")) 2))
+        (.equals ~(symbol (str ValueType "/ZERO")))))
+    (odd?
+      [this#]
+      (not (even? this#)))))
+
+(def->Number NaturalNumber BigInteger long natural #(clojure.core/not= (.signum %) -1))
+(def->IntegerOperations NaturalNumber BigInteger)
+
+(def->Number IntegerNumber BigInteger long integer (fn [value] true))
+(def->IntegerOperations IntegerNumber BigInteger)
+
+(def->Number RealNumber BigDecimal double real (fn [value] true))
 
