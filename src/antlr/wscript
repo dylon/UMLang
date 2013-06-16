@@ -1,0 +1,46 @@
+#!/usr/bin/env python2
+# encoding: utf-8
+
+from waflib import Utils
+
+def options(opt):
+  pass
+
+def configure(cfg):
+  pass
+
+def generate(gen):
+  opts = [
+    '-no-visitor',
+    '-no-listener',
+    '-Werror',
+    '-package %s' % '.'.join(gen.env['JAVA_PKG'])
+  ]
+
+  antlr_build_dir = 'build/antlr'
+  Utils.check_dir(antlr_build_dir)
+
+  # Generate the lexer and parser. Note that ANTLR4 does not currently seem to
+  # like the '-o' flag, which specifies the output directory for generated the
+  # generated files. As such, generate them in the source directory and move
+  # them to where they need to go.
+  gen.exec_command(
+      'cp src/antlr/*.g4 %s' % antlr_build_dir,
+      cwd  = '.')
+
+  ## Generate the Lexers and Parsers
+  # TODO: Figure out how to replace "antlr4" with "${ANTLR4}", outside of the
+  # build(bld) context.
+  gen.exec_command(
+      'antlr4 %s *.g4' % ' '.join(opts),
+      cwd  = antlr_build_dir)
+
+def deploy(dep):
+  java_src_dir = 'src/java/%s' % '/'.join(dep.env['JAVA_PKG'])
+  Utils.check_dir(java_src_dir)
+
+  ## Copy the generated, Java sources to their respective directories
+  dep.exec_command(
+      'cp build/antlr/*.java %s' % java_src_dir,
+      cwd  = '.')
+

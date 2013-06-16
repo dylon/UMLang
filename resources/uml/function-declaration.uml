@@ -1,0 +1,6 @@
++ public-method(bar:int, baz:real) : complex;
+
+(* Does it mean anything to have protected scope at the file level? *)
+# protected-method() : void;
+
+- private-method(param-with-default-value : int = 0) : int;

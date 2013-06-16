@@ -41,4 +41,5 @@
                    :plugins [[lein-midje "3.0.1"]]}}
   :source-paths ["src/clojure/"]
   :java-source-paths ["src/java/"]
+  :compile-path "build/java"
   :main umlang.core)

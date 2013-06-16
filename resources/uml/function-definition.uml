@@ -1,0 +1,5 @@
++ foo(bar:int, baz:real) : complex = {
+		imaginary-part : real = real(bar);
+		real-part = baz; (* type inferred by RHS *)
+		complex(real-part, imaginary-part);
+}
